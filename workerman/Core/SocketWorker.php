@@ -377,7 +377,7 @@ abstract class SocketWorker extends AbstractWorker
             if(!empty($this->recvBuffers[$fd]['buf']))
             {
                 $this->statusInfo['send_fail']++;
-                $this->notice("CLIENT_CLOSE\nCLIENT_IP:".$this->getRemoteIp()."\nBUFFER:[".var_export($this->recvBuffers[$fd]['buf'],true)."]\n");
+                $this->notice("CLIENT_CLOSE\nCLIENT_IP:".$this->getRemoteIp()."\nBUFFER:[".bin2hex($this->recvBuffers[$fd]['buf'])."]\n");
             }
             
             // 关闭链接
@@ -469,13 +469,13 @@ abstract class SocketWorker extends AbstractWorker
     protected function closeClient($fd)
     {
         // udp忽略
-        if($this->protocol != 'udp')
+        if($this->protocol != 'udp' && isset($this->connections[$fd]))
         {
             $this->event->del($this->connections[$fd], Events\BaseEvent::EV_READ);
             $this->event->del($this->connections[$fd], Events\BaseEvent::EV_WRITE);
             fclose($this->connections[$fd]);
-            unset($this->connections[$fd], $this->recvBuffers[$fd], $this->sendBuffers[$fd]);
         }
+        unset($this->connections[$fd], $this->recvBuffers[$fd], $this->sendBuffers[$fd]);
     }
     
     /**
