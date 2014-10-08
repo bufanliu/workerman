@@ -1,7 +1,7 @@
 workerman
 =========
 
-workerman 是一个高性能的PHP socket服务框架，开发者可以在这个框架下开发各种网络应用,例如Rpc服务、聊天室、游戏等。
+workerman 是一个高性能的PHP socket服务框架，开发者可以在这个框架下开发各种网络应用,例如移动通讯、手游服务端、网络游戏服务器、聊天室服务器、硬件通讯服务器、智能家居等
 workerman 具有以下特性
  * 支持HHVM，将PHP性能提高9倍左右
  * 多进程/多线程(多线程版本)
@@ -18,131 +18,144 @@ workerman 具有以下特性
  * 支持长连接
  * 支持以指定用户运行worker进程
  * 支持请求数上限配置
+ * 服务端心跳支持
+ * 支持多服务器部署
 
- [更多请访问www.workerman.net](http://www.workerman.net/workerman)
+ [更多请访问www.workerman.net](http://www.workerman.net)  
+ [文档doc.workerman.net](http://doc.workerman.net)  
 
-所需环境
-========
+applications/Demo测试方法
+===============
+  * 运行 telnet ip 8480
+  * 首先输入昵称 回车
+  * 后面直接打字回车是向所有人发消息
+  * uid:聊天内容 是向uid用户发送消息  
 
-workerman需要PHP版本不低于5.3，只需要安装PHP的Cli即可，无需安装PHP-FPM、nginx、apache
-workerman不能运行在Windows平台
+可以开多个telnet窗口，窗口间可以实时聊天
 
-安装
-=========
+关于applications/Demo
+=================
+ * [applications/Demo](https://github.com/walkor/workerman/tree/master/applications/Demo) 的业务逻辑全部在[applications/Demo/Event.php](https://github.com/walkor/workerman/blob/master/applications/Demo/Event.php) 中
+ * 开发者看懂[applications/Demo/Event.php](https://github.com/walkor/workerman/blob/master/applications/Demo/Event.php) 的代码基本上就知道如何开发了
+ * [applications/Demo](https://github.com/walkor/workerman/tree/master/applications/Demo) 使用的是及其简单的文本协议，适合非浏览器类的应用参考。例如移动通讯、手游、硬件通讯、智能家居等
+ * 如果是浏览器类的即时应用，可以参考[workerman-chat](http://www.workerman.net/workerman-chat) ，使用的是websocket协议（支持各种浏览器），同样只需要看懂[applications/Chat/Event.php](https://github.com/walkor/workerman-chat/blob/master/applications/Chat/Event.php) 即可
+ * 长连接类的应用 [applications/Demo](https://github.com/walkor/workerman/tree/master/applications/Demo)  [workerman-chat](http://www.workerman.net/workerman-chat)  [workerman-todpole](https://github.com/walkor/workerman-todpole) [workerman-flappy-bird](https://github.com/walkor/workerman-flappy-bird) 它们的代码结构完全相同，只是applications/XXX/Event.php实现不同
 
-以ubuntu为例
-
-安装PHP Cli  
-`sudo apt-get install php5-cli`
-
-强烈建议安装libevent扩展，以便支持更高的并发量  
-`sudo pecl install libevent`
-
-建议安装proctitle扩展(php5.5及以上版本原生支持，无需安装)，以便方便查看进程信息  
-`sudo pecl install proctitle`
-
-
-启动停止
-=========
-
-以ubuntu为例
-
-启动  
-`sudo ./bin/workermand start`
-
-重启启动  
-`sudo ./bin/workermand restart`
-
-平滑重启/重新加载配置  
-`sudo ./bin/workermand reload`
-
-查看服务状态  
-`sudo ./bin/workermand status`
-
-停止  
-`sudo ./bin/workermand stop`
-
-
-配置
-========
-
- * 配置文件在workerman/conf/目录下  
- * 其中workerman/conf/workerman.conf是workerman的主体配置文件，在里面可以设置运行模式、日志目录、pid文件存储位置等配置  
- * workerman/conf/conf.d/下每个配置文件对应一个网络应用，同时也对应workerman\workers下的一组worker进程。
- * 以Rpc网络服务应用的配置文件workerman/conf/conf.d/RpcWorker.conf为例
-
-```
-;Rpc网络服务应用配置
-;所用的传输层协议及绑定的ip端口
-listen = tcp://0.0.0.0:2015
-;长连接还是短连接，Rpc服务这里设置成短连接，每次请求后服务器主动断开
-persistent_connection = 0
-;启动多少worker进程，这里建议设置成cpu核数的整数倍，例如 CPU数*3
-start_workers=12
-;接收多少请求后退出该进程，重新启动一个新进程，设置成0代表永不重启
-max_requests=1000
-;以哪个用户运行该worker进程，建议使用权限较低的用户运行worker进程，例如www-data
-user=www-data
-;socket有数据可读的时候预读长度，一般设置为应用层协议包头的长度，这里设置成尽可能读取更多的数据
-preread_length=84000
-```
-
-一些demo
+一些demo连接
 ==================
-[小蝌蚪聊天室](http://kedou.workerman.net)  
+[小蝌蚪聊天室workerman-todpole](http://kedou.workerman.net)  
 [多人在线flappybird](http://flap.workerman.net)  
-[workerman聊天室](http://chat.workerman.net)  
+[workerman-chat聊天室](http://chat.workerman.net)  
 [json-rpc](http://www.workerman.net/workerman-jsonrpc)  
 [thrift-rpc](http://www.workerman.net/workerman-thrift)  
 [统计监控系统](http://www.workerman.net/workerman-statistics)  
 
-[更多请访问www.workerman.net](http://www.workerman.net)  
 
+短链开发demo
+============
 
-telnet远程控制及监控
-====================
+```php
+<?php
+class EchoService extends \Man\Core\SocketWorker
+{
+   /**
+    * 判断telnet客户端发来的数据是否接收完整
+    */
+   public function dealInput($recv_buffer)
+   {
+        // 根据协议,判断最后一个字符是不是回车 \n
+        if($recv_buffer[strlen($recv_buffer)-1] != "\n")
+        {
+            // 不是回车返回1告诉workerman我还需要再读一个字符
+            return 1;
+        }
+        // 告诉workerman数据完整了
+        return 0;
+   }
 
-###workerman通过workerman/workers/Monitor.php提供telnet远程控制及监控功能
-<pre>
-输入
-telnet xxx.xxx.xxx.xxx 2009
-输入
-status
-展示workerman状态
-status
----------------------------------------GLOBAL STATUS--------------------------------------------
-WorkerMan version:2.0.1
-start time:2013-12-26 22:12:48   run 0 days 0 hours
-load average: 0, 0, 0
-1 users          4 workers       15 processes
-worker_name    exit_status     exit_count
-FileMonitor    0                0
-Monitor        0                0
-RpcWorker      0                0
-WorkerManAdmin 0                0
----------------------------------------PROCESS STATUS-------------------------------------------
-pid     memory      listening        timestamp  worker_name    total_request packet_err thunder_herd client_close send_fail throw_exception suc/total
-24139   1.25M   tcp://0.0.0.0:2015   1388067168 RpcWorker      0              0          0            0            0         0               100%
-24140   1.25M   tcp://0.0.0.0:2015   1388067168 RpcWorker      0              0          0            0            0         0               100%
-24141   1.25M   tcp://0.0.0.0:2015   1388067168 RpcWorker      0              0          0            0            0         0               100%
-24142   1.25M   tcp://0.0.0.0:2015   1388067168 RpcWorker      0              0          0            0            0         0               100%
-24143   1.25M   tcp://0.0.0.0:2015   1388067168 RpcWorker      0              0          0            0            0         0               100%
-24144   1.25M   tcp://0.0.0.0:2015   1388067168 RpcWorker      0              0          0            0            0         0               100%
-24145   1.25M   tcp://0.0.0.0:2015   1388067168 RpcWorker      0              0          0            0            0         0               100%
-24146   1.25M   tcp://0.0.0.0:2015   1388067168 RpcWorker      0              0          0            0            0         0               100%
-24147   1.25M   tcp://0.0.0.0:2015   1388067168 RpcWorker      0              0          0            0            0         0               100%
-24148   1.25M   tcp://0.0.0.0:2015   1388067168 RpcWorker      0              0          0            0            0         0               100%
-24149   1.25M   tcp://0.0.0.0:2015   1388067168 RpcWorker      0              0          0            0            0         0               100%
-24150   1.25M   tcp://0.0.0.0:2015   1388067168 RpcWorker      0              0          0            0            0         0               100%
-24151   1.25M   tcp://0.0.0.0:3000   1388067168 WorkerManAdmin 0              0          0            0            0         0               100%
-</pre>
+   /**
+    * 处理业务逻辑，这里只是按照telnet客户端发来的命令返回对应的数据
+    */
+   public function dealProcess($recv_buffer)
+   {
+        // 判断telnet客户端发来的是什么
+        $cmd = trim($recv_buffer);
+        switch($cmd)
+        {
+            // 获得服务器的日期
+            case 'date':
+            return $this->sendToClient(date('Y-m-d H:i:s')."\n");
+            // 获得服务器的负载
+            case 'load':
+            return $this->sendToClient(var_export(sys_getloadavg(), true)."\n");
+            case 'quit':
+            return $this->closeClient($this->currentDealFd);
+            default:
+            return $this->sendToClient("unknown cmd\n");
+        }
+   }
+}
+```
 
-###telnet支持的命令
- * status
- * stop
- * reload
- * kill pid
- * quit
+长链接应用开发demo
+=============
+
+```php
+// 协议为 文本+回车
+class Event
+{
+    /**
+     * 网关有消息时，区分请求边界，分包
+     */
+    public static function onGatewayMessage($buffer)
+    {
+        // 判断最后一个字符是否是回车("\n")
+        if($buffer[strlen($buffer)-1] === "\n")
+        {
+            return 0;
+        }
+
+        // 说明还有请求数据没收到，但是由于不知道还有多少数据没收到，所以只能返回1，因为有可能下一个字符就是回车（"\n"）
+        return 1;
+    }
+
+   /**
+    * 有消息时触发该方法
+    * @param int $client_id 发消息的client_id
+    * @param string $message 消息
+    * @return void
+    */
+   public static function onMessage($client_id, $message)
+   {
+        // 获得客户端来发的消息具体内容，trim去掉了请求末尾的回车
+        $message_data = trim($message);
+
+        // ****如果没有$_SESSION['not_first_time']说明是第一次发消息****
+        if(empty($_SESSION['not_first_time']))
+        {
+            $_SESSION['not_first_time'] = true;
+
+            // 广播所有用户，xxx come
+            GateWay::sendToAll("client_id:$client_id come\n");
+        }
+
+        // 向所有人转发消息
+        return GateWay::sendToAll("client[$client_id] said :" . $message));
+   }
+
+   /**
+    * 当用户断开连接时触发的方法
+    * @param integer $client_id 断开连接的用户id
+    * @return void
+    */
+   public static function onClose($client_id)
+   {
+       // 广播 xxx logout
+       GateWay::sendToAll("client[$client_id] logout\n");
+   }
+}
+```
+
  
 性能测试
 =============
